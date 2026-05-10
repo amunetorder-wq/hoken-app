@@ -62,14 +62,12 @@ def create_diagnosis_pdf(hp, choices):
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # ヘッダー
     p.setFont(font_name, 24)
     p.drawCentredString(width/2, height - 60, "STORE DEFENSE 戦略診断書")
     
     p.setFont(font_name, 14)
     p.drawString(50, height - 120, f"最終店舗生存耐久度（HP）: {hp:,} / 3,000,000")
     
-    # 判定
     p.setFont(font_name, 18)
     if hp == 3000000:
         p.setFillColor(colors.green)
@@ -82,7 +80,6 @@ def create_diagnosis_pdf(hp, choices):
         result_text = "判定：経営崩壊寸前"
     p.drawString(50, height - 150, result_text)
     
-    # テーブルデータ
     p.setFillColor(colors.black)
     p.setFont(font_name, 12)
     scenarios = [
@@ -105,7 +102,6 @@ def create_diagnosis_pdf(hp, choices):
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 350)
     
-    # アドバイス
     p.setFont(font_name, 14)
     p.drawString(50, height - 400, "【防衛戦略アドバイス】")
     p.setFont(font_name, 11)
@@ -146,7 +142,7 @@ if st.session_state.step > 0 and st.session_state.step < 5:
     with col_hp2:
         st.write(f"**HP: {st.session_state.hp:,}**")
 
-# ステップ分岐
+# --- ステージ分岐 ---
 if st.session_state.step == 0:
     st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
     st.subheader("序章：3年目の試練")
@@ -155,73 +151,3 @@ if st.session_state.step == 0:
     if st.button("▶ ゲームを開始する"):
         st.session_state.step = 1
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state.step == 1:
-    st.subheader("STAGE 1：天井からの刺客")
-    st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # 仮のURL。後で実際のmp4に差し替え可能
-    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
-    st.write("金曜日のピーク時、2階の配管が破裂！汚水がPOSレジを直撃。")
-    st.write("被害額：1,100,000円")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("【A】保険という盾で防ぐ"): next_step(0, "A"); st.rerun()
-    with col2:
-        if st.button("【B】気合で耐える（自腹）"): next_step(1100000, "B"); st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state.step == 2:
-    st.subheader("STAGE 2：見えない猛毒")
-    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
-    st.write("保健所からの通告。先週末の客数名が食中毒を発症した。")
-    st.write("被害額：1,500,000円（賠償金＋営業停止損害）")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("【A】PL保険を発動"): next_step(0, "A"); st.rerun()
-    with col2:
-        if st.button("【B】貯金を切り崩す"): next_step(1500000, "B"); st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state.step == 3:
-    st.subheader("STAGE 3：SNSという広域魔法")
-    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
-    st.write("店員がお客様の高級バッグを汚し、SNSで炎上。謝罪と補償を求められている。")
-    st.write("被害額：300,000円")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("【A】施設賠償責任保険を適用"): next_step(0, "A"); st.rerun()
-    with col2:
-        if st.button("【B】丸腰で謝罪に行く"): next_step(300000, "B"); st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state.step == 4:
-    st.subheader("STAGE 4：消えた50人の足音")
-    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
-    st.write("50名の団体予約がドタキャン。食材と人件費がすべて無駄に。")
-    st.write("被害額：250,000円")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("【A】キャンセル保険で補填"): next_step(0, "A"); st.rerun()
-    with col2:
-        if st.button("【B】泣き寝入りする"): next_step(250000, "B"); st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state.step == 5:
-    st.subheader("👑 戦略レポート生成")
-    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
-    st.write(f"最終資金（HP）: **{st.session_state.hp:,}円**")
-    
-    pdf = create_diagnosis_pdf(st.session_state.hp, st.session_state.choices)
-    st.download_button(
-        label="📄 戦略診断書（PDF）をダウンロード",
-        data=pdf,
-        file_name="diagnosis_report.pdf",
-        mime="application/pdf"
-    )
-    
-    if st.button("🔄 最初からやり直す"):
-        st.session_state.step = 0
-        st.session_state.hp = 3000000
-        st.session_state.choices = []
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
