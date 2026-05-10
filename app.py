@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
@@ -10,41 +11,16 @@ import io
 # --- 🎭 1. 究極のRPGデザイン（CSS） ---
 st.markdown("""
     <style>
-    /* 全体をスライドと同じダークチャコールに */
-    .stApp {
-        background-color: #0a0a0a;
-        color: #ffffff;
-    }
-    /* ボタンをRPGの選択肢風に */
+    .stApp { background-color: #0a0a0a; color: #ffffff; }
     .stButton>button {
-        width: 100%;
-        border-radius: 10px;
-        height: 4em;
-        background-color: #111111;
-        color: #22c55e;
-        font-size: 20px;
-        font-weight: bold;
-        border: 2px solid #22c55e;
-        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
-        transition: 0.3s;
+        width: 100%; border-radius: 10px; height: 4em;
+        background-color: #111111; color: #22c55e;
+        font-size: 20px; font-weight: bold; border: 2px solid #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); transition: 0.3s;
     }
-    .stButton>button:hover {
-        background-color: #22c55e;
-        color: #000000;
-        box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
-    }
-    /* カード風の枠を作成 */
-    .scenario-card {
-        background-color: #1a1a1a;
-        padding: 30px;
-        border-radius: 20px;
-        border: 1px solid #333;
-        margin-bottom: 20px;
-    }
-    /* HPバーの色 */
-    .stProgress > div > div > div > div {
-        background-color: #22c55e;
-    }
+    .stButton>button:hover { background-color: #22c55e; color: #000000; box-shadow: 0 0 30px rgba(34, 197, 94, 0.5); }
+    .scenario-card { background-color: #1a1a1a; padding: 30px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; }
+    .stProgress > div > div > div > div { background-color: #22c55e; }
     h1 { color: #ffffff !important; font-family: 'Poppins', sans-serif; }
     h2, h3 { color: #22c55e !important; }
     </style>
@@ -131,7 +107,7 @@ def next_step(damage, choice):
     st.session_state.choices.append(choice)
     st.session_state.step += 1
 
-st.title("🛡️ STORE DEFENSE RPG")
+st.title("🛡️ ストア防衛RPG")
 
 # HPゲージの表示
 if st.session_state.step > 0 and st.session_state.step < 5:
@@ -151,3 +127,96 @@ if st.session_state.step == 0:
     if st.button("▶ ゲームを開始する"):
         st.session_state.step = 1
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.step == 1:
+    st.subheader("STAGE 1：天井からの刺客")
+    
+    if os.path.exists("water_leak.mp4"):
+        st.video("water_leak.mp4", autoplay=True, loop=True, muted=True)
+    else:
+        st.info("※水漏れの動画（water_leak.mp4）を準備中...")
+        
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("金曜日のピーク時、2階の配管が破裂！汚水がPOSレジを直撃。")
+    st.write("被害額：1,100,000円")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("【A】保険という盾で防ぐ"): next_step(0, "A"); st.rerun()
+    with col2:
+        if st.button("【B】気合で耐える（自腹）"): next_step(1100000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.step == 2:
+    st.subheader("STAGE 2：見えない猛毒")
+    
+    if os.path.exists("health_inspector.mp4"):
+        st.video("health_inspector.mp4", autoplay=True, loop=True, muted=True)
+    else:
+        st.info("※食中毒の動画（health_inspector.mp4）を準備中...")
+
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("保健所からの通告。先週末の客数名が食中毒を発症した。")
+    st.write("被害額：1,500,000円（賠償金＋営業停止損害）")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("【A】PL保険を発動"): next_step(0, "A"); st.rerun()
+    with col2:
+        if st.button("【B】貯金を切り崩す"): next_step(1500000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.step == 3:
+    st.subheader("STAGE 3：SNSという広域魔法")
+    
+    if os.path.exists("sns_flame.mp4"):
+        st.video("sns_flame.mp4", autoplay=True, loop=True, muted=True)
+    else:
+        st.info("※炎上の動画（sns_flame.mp4）を準備中...")
+
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("店員がお客様の高級バッグを汚し、SNSで炎上。謝罪と補償を求められている。")
+    st.write("被害額：300,000円")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("【A】施設賠償責任保険を適用"): next_step(0, "A"); st.rerun()
+    with col2:
+        if st.button("【B】丸腰で謝罪に行く"): next_step(300000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.step == 4:
+    st.subheader("STAGE 4：消えた50人の足音")
+    
+    if os.path.exists("no_show.mp4"):
+        st.video("no_show.mp4", autoplay=True, loop=True, muted=True)
+    else:
+        st.info("※ドタキャンの動画（no_show.mp4）を準備中...")
+
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("50名の団体予約がドタキャン。食材と人件費がすべて無駄に。")
+    st.write("被害額：250,000円")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("【A】キャンセル保険で補填"): next_step(0, "A"); st.rerun()
+    with col2:
+        if st.button("【B】泣き寝入りする"): next_step(250000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.step == 5:
+    st.subheader("👑 戦略レポート生成")
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write(f"最終資金（HP）: **{st.session_state.hp:,}円**")
+    
+    pdf = create_diagnosis_pdf(st.session_state.hp, st.session_state.choices)
+    st.download_button(
+        label="📄 戦略診断書（PDF）をダウンロード",
+        data=pdf,
+        file_name="diagnosis_report.pdf",
+        mime="application/pdf"
+    )
+    
+    if st.button("🔄 最初からやり直す"):
+        st.session_state.step = 0
+        st.session_state.hp = 3000000
+        st.session_state.choices = []
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
