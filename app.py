@@ -7,70 +7,124 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 import io
 
-# --- 日本語フォントの設定 ---
+# --- 🎭 1. 究極のRPGデザイン（CSS） ---
+st.markdown("""
+    <style>
+    /* 全体をスライドと同じダークチャコールに */
+    .stApp {
+        background-color: #0a0a0a;
+        color: #ffffff;
+    }
+    /* ボタンをRPGの選択肢風に */
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        height: 4em;
+        background-color: #111111;
+        color: #22c55e;
+        font-size: 20px;
+        font-weight: bold;
+        border: 2px solid #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #22c55e;
+        color: #000000;
+        box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+    }
+    /* カード風の枠を作成 */
+    .scenario-card {
+        background-color: #1a1a1a;
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid #333;
+        margin-bottom: 20px;
+    }
+    /* HPバーの色 */
+    .stProgress > div > div > div > div {
+        background-color: #22c55e;
+    }
+    h1 { color: #ffffff !important; font-family: 'Poppins', sans-serif; }
+    h2, h3 { color: #22c55e !important; }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- 📄 2. PDF診断書作成ロジック ---
 try:
     pdfmetrics.registerFont(TTFont('MSMincho', 'C:/Windows/Fonts/msmincho.ttc'))
     font_name = 'MSMincho'
 except:
     font_name = 'Helvetica'
 
-# --- PDFを作成する関数（表形式） ---
-def create_pdf(hp, choices):
+def create_diagnosis_pdf(hp, choices):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # タイトル
-    p.setFont(font_name, 20)
-    p.drawCentredString(width / 2, height - 50, "リスク診断結果・保険提案書")
-
-    # 基本情報
-    p.setFont(font_name, 12)
-    p.drawString(50, height - 100, f"最終運転資金残高: {hp:,}円")
-    loss = 3000000 - hp
-    p.drawString(50, height - 120, f"今回のシミュレーションによる損失合計: {loss:,}円")
-
-    # シナリオの結果を表形式でまとめる
-    scenario_names = ["水漏れ", "食中毒", "クレーム", "ドタキャン"]
-    damages = [1100000, 1500000, 300000, 250000]
+    # ヘッダー
+    p.setFont(font_name, 24)
+    p.drawCentredString(width/2, height - 60, "STORE DEFENSE 戦略診断書")
     
-    # テーブル用のデータ作成
-    data = [["トラブル内容", "あなたの選択", "実際の損失額"]]
-    for i in range(len(choices)):
-        choice_text = "保険あり(A)" if choices[i] == "A" else "未加入(B)"
-        actual_damage = f"{0 if choices[i] == 'A' else damages[i]:,}円"
-        data.append([scenario_names[i], choice_text, actual_damage])
-
-    # テーブルのスタイル設定
-    table = Table(data, colWidths=[150, 100, 150])
-    table.setStyle(TableStyle([
-        ('FONT', (0, 0), (-1, -1), font_name, 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
-
-    # テーブルを描画
-    table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 300)
-
-    # アドバイス
-    p.drawString(50, height - 350, "【専門家のアドバイス】")
-    p.setFont(font_name, 10)
-    if "B" in choices:
-        p.drawString(50, height - 370, "Bランクのリスクが顕在化しています。尼崎・西宮エリアでの店舗運営において、")
-        p.drawString(50, height - 385, "これらのトラブルは『明日起きてもおかしくない』ものです。早急な対策を。")
+    p.setFont(font_name, 14)
+    p.drawString(50, height - 120, f"最終店舗生存耐久度（HP）: {hp:,} / 3,000,000")
+    
+    # 判定
+    p.setFont(font_name, 18)
+    if hp == 3000000:
+        p.setFillColor(colors.green)
+        result_text = "判定：鉄壁の守護神"
+    elif hp > 1500000:
+        p.setFillColor(colors.orange)
+        result_text = "判定：要防衛力強化"
     else:
-        p.drawString(50, height - 370, "完璧なリスク管理です！現在の安心を維持しつつ、最新の特約についても")
-        p.drawString(50, height - 385, "検討の余地があります。ぜひ一度ご相談ください。")
+        p.setFillColor(colors.red)
+        result_text = "判定：経営崩壊寸前"
+    p.drawString(50, height - 150, result_text)
+    
+    # テーブルデータ
+    p.setFillColor(colors.black)
+    p.setFont(font_name, 12)
+    scenarios = [
+        ["リスク項目", "選択した装備", "損害（ダメージ）"],
+        ["水漏れトラブル", "保険あり" if choices[0]=="A" else "未加入", "0円" if choices[0]=="A" else "1,100,000円"],
+        ["食中毒リスク", "保険あり" if choices[1]=="A" else "未加入", "0円" if choices[1]=="A" else "1,500,000円"],
+        ["SNS炎上・対人", "保険あり" if choices[2]=="A" else "未加入", "0円" if choices[2]=="A" else "300,000円"],
+        ["ドタキャン(50名)", "保険あり" if choices[3]=="A" else "未加入", "0円" if choices[3]=="A" else "250,000円"]
+    ]
+    
+    table = Table(scenarios, colWidths=[180, 150, 150])
+    table.setStyle(TableStyle([
+        ('FONT', (0,0), (-1,-1), font_name, 10),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('BACKGROUND', (0,0), (-1,0), colors.black),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+    ]))
+    table.wrapOn(p, width, height)
+    table.drawOn(p, 50, height - 350)
+    
+    # アドバイス
+    p.setFont(font_name, 14)
+    p.drawString(50, height - 400, "【防衛戦略アドバイス】")
+    p.setFont(font_name, 11)
+    advice_y = height - 430
+    advices = [
+        "・今回のシミュレーション通り、突発的な事故は『確率』ではなく『いつか起きる事実』です。",
+        "・特に食中毒や水漏れは、一度の発生で数百万円単位のキャッシュが流出します。",
+        "・月々のわずかな保険料（MP）で、この数百万のダメージを無効化するのが賢い経営の盾です。"
+    ]
+    for line in advices:
+        p.drawString(60, advice_y, line)
+        advice_y -= 20
 
     p.showPage()
     p.save()
     buffer.seek(0)
     return buffer
 
-# --- アプリのメイン処理 ---
+# --- 🎮 3. ゲームメインエンジン ---
 if 'step' not in st.session_state:
     st.session_state.step = 0
     st.session_state.hp = 3000000
@@ -81,70 +135,93 @@ def next_step(damage, choice):
     st.session_state.choices.append(choice)
     st.session_state.step += 1
 
-st.title("店舗防衛RPG - 3年目の試練")
-st.write(f"**現在の運転資金:** {st.session_state.hp:,}円")
-st.divider()
+st.title("🛡️ STORE DEFENSE RPG")
 
-# --- 各ステップの分岐 ---
+# HPゲージの表示
+if st.session_state.step > 0 and st.session_state.step < 5:
+    col_hp1, col_hp2 = st.columns([3, 1])
+    with col_hp1:
+        hp_ratio = st.session_state.hp / 3000000
+        st.progress(max(0.0, hp_ratio))
+    with col_hp2:
+        st.write(f"**HP: {st.session_state.hp:,}**")
+
+# ステップ分岐
 if st.session_state.step == 0:
-    st.subheader("オープニング")
-    st.write("おめでとうございます！お店は3年目を迎えました。しかしトラブルは突然やってきます。")
-    if st.button("冒険を始める"):
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.subheader("序章：3年目の試練")
+    st.write("開店から3年。順調だった経営に、予期せぬリスクが牙を剥く。")
+    st.write("あなたの選択で、お店の未来を守り抜け！")
+    if st.button("▶ ゲームを開始する"):
         st.session_state.step = 1
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.step == 1:
-    st.subheader("試練1：水漏れトラブル")
-    st.write("2階からの水漏れでPOSレジが故障！")
+    st.subheader("STAGE 1：天井からの刺客")
+    st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # 仮のURL。後で実際のmp4に差し替え可能
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("金曜日のピーク時、2階の配管が破裂！汚水がPOSレジを直撃。")
+    st.write("被害額：1,100,000円")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("[A] 店舗総合保険"): next_step(0, "A"); st.rerun()
+        if st.button("【A】保険という盾で防ぐ"): next_step(0, "A"); st.rerun()
     with col2:
-        if st.button("[B] 火災保険のみ"): next_step(1100000, "B"); st.rerun()
+        if st.button("【B】気合で耐える（自腹）"): next_step(1100000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.step == 2:
-    st.subheader("試練2：食中毒トラブル")
-    st.write("保健所から電話！食中毒の疑いで営業停止に。")
+    st.subheader("STAGE 2：見えない猛毒")
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("保健所からの通告。先週末の客数名が食中毒を発症した。")
+    st.write("被害額：1,500,000円（賠償金＋営業停止損害）")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("[A] PL保険あり"): next_step(0, "A"); st.rerun()
+        if st.button("【A】PL保険を発動"): next_step(0, "A"); st.rerun()
     with col2:
-        if st.button("[B] 未加入"): next_step(1500000, "B"); st.rerun()
+        if st.button("【B】貯金を切り崩す"): next_step(1500000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.step == 3:
-    st.subheader("試練3：対人クレーム")
-    st.write("客の高級バッグにスープをこぼしてしまった！")
+    st.subheader("STAGE 3：SNSという広域魔法")
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("店員がお客様の高級バッグを汚し、SNSで炎上。謝罪と補償を求められている。")
+    st.write("被害額：300,000円")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("[A] 施設賠償責任保険"): next_step(0, "A"); st.rerun()
+        if st.button("【A】施設賠償責任保険を適用"): next_step(0, "A"); st.rerun()
     with col2:
-        if st.button("[B] 丸腰で対応"): next_step(300000, "B"); st.rerun()
+        if st.button("【B】丸腰で謝罪に行く"): next_step(300000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.step == 4:
-    st.subheader("試練4：ドタキャン")
-    st.write("50名の貸切予約がノーショウ（無断キャンセル）に。")
+    st.subheader("STAGE 4：消えた50人の足音")
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write("50名の団体予約がドタキャン。食材と人件費がすべて無駄に。")
+    st.write("被害額：250,000円")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("[A] キャンセル保険"): next_step(0, "A"); st.rerun()
+        if st.button("【A】キャンセル保険で補填"): next_step(0, "A"); st.rerun()
     with col2:
-        if st.button("[B] 未加入"): next_step(250000, "B"); st.rerun()
+        if st.button("【B】泣き寝入りする"): next_step(250000, "B"); st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.step == 5:
-    st.subheader("エンディング・診断結果")
-    st.write(f"最終的な運転資金は『{st.session_state.hp:,}円』です。")
+    st.subheader("👑 戦略レポート生成")
+    st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
+    st.write(f"最終資金（HP）: **{st.session_state.hp:,}円**")
     
-    # PDFデータの準備
-    pdf_file = create_pdf(st.session_state.hp, st.session_state.choices)
-    
+    pdf = create_diagnosis_pdf(st.session_state.hp, st.session_state.choices)
     st.download_button(
-        label="診断結果（PDF）をダウンロード",
-        data=pdf_file,
-        file_name="result.pdf",
+        label="📄 戦略診断書（PDF）をダウンロード",
+        data=pdf,
+        file_name="diagnosis_report.pdf",
         mime="application/pdf"
     )
-
-    if st.button("最初からやり直す"):
+    
+    if st.button("🔄 最初からやり直す"):
         st.session_state.step = 0
         st.session_state.hp = 3000000
         st.session_state.choices = []
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
